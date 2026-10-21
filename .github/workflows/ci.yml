@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: shellcheck install.sh test/*.sh
+
+  # The bash that macOS ships, with a stand-in OpenCode.
+  bash-3-2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker run --rm -v "$PWD:/w" -w /w bash:3.2 bash test/compat.sh
+
+  # A real OpenCode, at the version the plugins were tested with.
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install OpenCode
+        run: |
+          version="$(sed -n 's/^OPENCODE_TESTED=//p' install.sh)"
+          curl -fsSL https://opencode.ai/v2/install | bash -s -- --version "$version" --no-modify-path
+      - run: bash test/compat.sh
+      - name: Run install.sh against OpenCode
+        run: KIT_BASH=/bin/bash bash test/test.sh "$HOME/.opencode/bin/opencode"
