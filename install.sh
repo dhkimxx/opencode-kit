@@ -6,12 +6,12 @@
 # OpenCode's settings are changed only through `opencode plugin add` and `opencode plugin remove`.
 set -euo pipefail
 
-KIT_VERSION=0.1.0
+KIT_VERSION=0.2.0
 # OpenCode versions this set of releases was tested with. Older versions are refused; newer ones get a warning.
 OPENCODE_MIN=2.1.2
-OPENCODE_TESTED=2.1.2
+OPENCODE_TESTED=2.1.4
 # Each plugin and the release installed for it.
-PLUGINS="lodestar:v0.3.1 ask:v0.3.3 delete:v0.1.0"
+PLUGINS="lodestar:v0.4.0 ask:v0.3.3 delete:v0.1.0"
 OWNER=dhkimxx
 
 usage() {

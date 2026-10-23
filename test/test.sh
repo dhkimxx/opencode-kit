@@ -58,7 +58,7 @@ fresh
 kit >"$WORK/out" 2>&1 || { cat "$WORK/out"; exit 1; }
 check "ask and delete are in cli.json, pinned" has "$(cli_json)" '"github:dhkimxx/opencode-ask#v0.3.3"'
 check "delete is pinned" has "$(cli_json)" '"github:dhkimxx/opencode-delete#v0.1.0"'
-check "lodestar is in opencode.json, pinned" has "$(server_json)" '"github:dhkimxx/opencode-lodestar#v0.3.1"'
+check "lodestar is in opencode.json, pinned" has "$(server_json)" '"github:dhkimxx/opencode-lodestar#v0.4.0"'
 check "one download per plugin" test "$(caches)" = "git-opencode-ask git-opencode-delete git-opencode-lodestar "
 
 echo "running it again changes nothing"
@@ -85,7 +85,7 @@ EOF
 kit >"$WORK/out" 2>&1 || { cat "$WORK/out"; exit 1; }
 check "the unpinned ask is gone" lacks "$(cli_json)" '"github:dhkimxx/opencode-ask"'
 check "ask is listed once" test "$(count "$(cli_json)" 'dhkimxx/opencode-ask#')" = 1
-check "lodestar is listed once, at v0.3.1" test "$(count "$(server_json)" 'dhkimxx/opencode-lodestar')" = 1
+check "lodestar is listed once, at v0.4.0" test "$(count "$(server_json)" 'dhkimxx/opencode-lodestar')" = 1
 check "similar entries stay" has "$(cli_json)" '"github:someone/opencode-ask"'
 check "local checkouts stay" has "$(cli_json)" '"/home/me/src/opencode-ask"'
 check "longer names stay" has "$(cli_json)" '"github:dhkimxx/opencode-asking"'

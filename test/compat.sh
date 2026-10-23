@@ -11,7 +11,7 @@ echo "bash $BASH_VERSION"
 
 cat >"$WORK/opencode" <<'EOF'
 #!/bin/sh
-if [ "$1" = --version ]; then echo "opencode v${STUB_VERSION:-2.1.2}"; exit 0; fi
+if [ "$1" = --version ]; then echo "opencode v${STUB_VERSION:-2.1.4}"; exit 0; fi
 echo "$*" >>"$STUB_LOG"
 EOF
 chmod +x "$WORK/opencode"
@@ -81,7 +81,7 @@ check "rejects an unknown plugin" test "$status" = 1
 if STUB_VERSION=2.1.1 kit >"$WORK/out" 2>&1; then status=0; else status=$?; fi
 check "refuses 2.1.1" test "$status" = 1
 if STUB_VERSION=2.2.0-beta.1 kit --dry-run >"$WORK/out" 2>&1; then status=0; else status=$?; fi
-check "takes a newer pre-release, with a warning" has "$WORK/out" "newer than 2.1.2"
+check "takes a newer pre-release, with a warning" has "$WORK/out" "newer than 2.1.4"
 if STUB_VERSION=2.1.2-beta.3 kit --dry-run >"$WORK/out" 2>&1; then status=0; else status=$?; fi
 check "refuses a pre-release of the minimum" test "$status" = 1
 
