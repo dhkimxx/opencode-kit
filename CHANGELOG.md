@@ -3,7 +3,7 @@
 All notable changes to this project are listed here.
 This project follows [Semantic Versioning](https://semver.org).
 
-## [0.3.0] - Unreleased
+## [0.3.0] - 2026-10-29
 
 ### Added
 
@@ -28,5 +28,6 @@ This project follows [Semantic Versioning](https://semver.org).
 - Before installing, it removes every other copy of these plugins: other entries in your settings, clones in OpenCode's plugins folder, and downloaded copies in OpenCode's cache.
 - `--only` installs some of the plugins, `--uninstall` removes them, and `--dry-run` shows what would change.
 
+[0.3.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.2.0
 [0.1.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.1.0
