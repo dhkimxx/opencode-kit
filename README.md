@@ -14,7 +14,7 @@ curl -fsSL https://raw.githubusercontent.com/dhkimxx/opencode-kit/main/install.s
 
 ## What it does
 
-- **Checks your OpenCode version.** It refuses one older than these releases need, and says how to upgrade. A version newer than the one they were tested with gets a warning, and the install goes ahead.
+- **Brings OpenCode to the version these releases were tested with.** An older OpenCode is upgraded with `opencode upgrade`. A newer one is left as it is, with a warning. If OpenCode is too old for the plugins and can't be upgraded, nothing is installed.
 - **Installs each plugin at a fixed release**, such as `github:dhkimxx/opencode-ask#v0.3.3`, with `opencode plugin add`.
 - **Removes every other copy first**, so nothing loads twice:
   - other entries for the same plugin in your settings, such as `github:dhkimxx/opencode-ask` without a release, or an older release;
@@ -31,6 +31,9 @@ Pass options after `bash -s --`:
 # Only some of the plugins
 curl -fsSL https://raw.githubusercontent.com/dhkimxx/opencode-kit/main/install.sh | bash -s -- --only lodestar,ask
 
+# Install the plugins, but leave OpenCode's version alone
+curl -fsSL https://raw.githubusercontent.com/dhkimxx/opencode-kit/main/install.sh | bash -s -- --keep-opencode
+
 # See what would change, without changing anything
 curl -fsSL https://raw.githubusercontent.com/dhkimxx/opencode-kit/main/install.sh | bash -s -- --dry-run
 
@@ -44,7 +47,7 @@ A running OpenCode picks up the changes within a few seconds. Restart it if a co
 
 ## Requirements
 
-- OpenCode 2.1.2 or newer. Tested with OpenCode 2.1.4.
+- OpenCode 2.1.2 or newer. Tested with OpenCode 2.2.0, which an older OpenCode is upgraded to.
 - Linux or macOS, with `bash` and `curl`. On Windows, use WSL, or install each plugin by hand as its README describes.
 
 ## Install by hand

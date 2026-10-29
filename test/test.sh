@@ -26,7 +26,8 @@ in_home() {
     )
 }
 
-kit() { in_home env OPENCODE_BIN="$OPENCODE_BIN" "$KIT_BASH" "$ROOT/install.sh" "$@"; }
+# --keep-opencode: these scenarios are about the plugins, and must never upgrade the OpenCode they run on.
+kit() { in_home env OPENCODE_BIN="$OPENCODE_BIN" "$KIT_BASH" "$ROOT/install.sh" --keep-opencode "$@"; }
 opencode() { in_home "$OPENCODE_BIN" "$@"; }
 
 cli_json() { cat "$WORK/home/config/opencode/cli.json" 2>/dev/null || true; }

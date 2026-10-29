@@ -6,10 +6,11 @@
 # OpenCode's settings are changed only through `opencode plugin add` and `opencode plugin remove`.
 set -euo pipefail
 
-KIT_VERSION=0.2.0
-# OpenCode versions this set of releases was tested with. Older versions are refused; newer ones get a warning.
+KIT_VERSION=0.3.0
+# The OpenCode these releases were tested with. An older OpenCode is upgraded to it, one that can't be upgraded and is below
+# OPENCODE_MIN is refused, and a newer one gets a warning and is left as it is.
 OPENCODE_MIN=2.1.2
-OPENCODE_TESTED=2.1.4
+OPENCODE_TESTED=2.2.0
 # Each plugin and the release installed for it.
 PLUGINS="lodestar:v0.4.0 ask:v0.3.3 delete:v0.1.0"
 OWNER=dhkimxx
@@ -23,8 +24,12 @@ Usage: install.sh [options]
 Options:
     --only <names>   Install or remove only these plugins, comma-separated (e.g. lodestar,ask)
     --uninstall      Remove the plugins instead of installing them
+    --keep-opencode  Don't upgrade OpenCode, even if it is older than the version these releases were tested with
     --dry-run        Show what would change, and change nothing
     -h, --help       Show this help
+
+OpenCode itself is upgraded with \`opencode upgrade\` when it is older than $OPENCODE_TESTED, the version these releases
+were tested with. A newer OpenCode is left alone.
 
 Run it again to update. Each run first removes every other copy of these plugins:
 other entries in your settings, clones in OpenCode's plugins folder, and downloaded copies.
@@ -59,6 +64,8 @@ fail() {
 }
 
 DRY_RUN=false
+KEEP_OPENCODE=false
+UNINSTALLING=false
 
 # OpenCode must never read this script: under `curl | bash` it is the shell's standard input.
 opencode_cmd() { "$OPENCODE" "$@" </dev/null; }
@@ -94,16 +101,48 @@ compare_versions() {
     echo 0
 }
 
-check_opencode() {
-    OPENCODE=$(find_opencode)
-    [ -n "$OPENCODE" ] || fail "OpenCode is not installed. Install it first: curl -fsSL https://opencode.ai/v2/install | bash"
+opencode_version() {
     local output version
     output=$(opencode_cmd --version 2>/dev/null) || fail "could not run $OPENCODE --version"
     version=${output##* }
     version=${version#v}
     [ -n "$version" ] || fail "could not read OpenCode's version from: $output"
-    if [ "$(compare_versions "$version" "$OPENCODE_MIN")" = -1 ]; then
-        fail "OpenCode $version is too old for these plugins, which need $OPENCODE_MIN or newer. Run \`opencode upgrade\`, then run this again."
+    printf '%s\n' "$version"
+}
+
+# Brings an OpenCode older than the tested one up to it. `opencode upgrade` picks the way it was installed, but it can't
+# tell for the install script's own folder, so that one is named.
+upgrade_opencode() {
+    local version=$1 output method=()
+    case $OPENCODE in "$HOME"/.opencode/bin/*) method=(--method curl) ;; esac
+    if $DRY_RUN; then
+        say "  would upgrade OpenCode from $version to $OPENCODE_TESTED"
+        return 0
+    fi
+    say "Upgrading OpenCode from $version to $OPENCODE_TESTED"
+    if ! output=$(opencode_cmd upgrade ${method[@]+"${method[@]}"} "$OPENCODE_TESTED" 2>&1); then
+        printf '%s\n' "$output" >&2
+        return 1
+    fi
+}
+
+check_opencode() {
+    OPENCODE=$(find_opencode)
+    [ -n "$OPENCODE" ] || fail "OpenCode is not installed. Install it first: curl -fsSL https://opencode.ai/v2/install | bash"
+    local version
+    version=$(opencode_version)
+    if [ "$(compare_versions "$version" "$OPENCODE_TESTED")" = -1 ] && ! $KEEP_OPENCODE && ! $UNINSTALLING; then
+        if upgrade_opencode "$version"; then
+            # A dry run goes on as if the upgrade had worked.
+            if $DRY_RUN; then version=$OPENCODE_TESTED; else version=$(opencode_version); fi
+        elif [ "$(compare_versions "$version" "$OPENCODE_MIN")" = -1 ]; then
+            fail "OpenCode $version is too old for these plugins, which need $OPENCODE_MIN or newer, and it could not be upgraded. Run \`opencode upgrade $OPENCODE_TESTED\`, then run this again."
+        else
+            warn "could not upgrade OpenCode to $OPENCODE_TESTED. Installing the plugins on $version anyway."
+        fi
+    fi
+    if [ "$(compare_versions "$version" "$OPENCODE_MIN")" = -1 ] && ! $UNINSTALLING; then
+        fail "OpenCode $version is too old for these plugins, which need $OPENCODE_MIN or newer. Run \`opencode upgrade $OPENCODE_TESTED\`, then run this again."
     fi
     if [ "$(compare_versions "$version" "$OPENCODE_TESTED")" = 1 ]; then
         warn "OpenCode $version is newer than $OPENCODE_TESTED, the version these releases were tested with. Installing anyway."
@@ -231,6 +270,11 @@ main() {
                 ;;
             --uninstall)
                 uninstall=true
+                UNINSTALLING=true
+                shift
+                ;;
+            --keep-opencode)
+                KEEP_OPENCODE=true
                 shift
                 ;;
             --dry-run)

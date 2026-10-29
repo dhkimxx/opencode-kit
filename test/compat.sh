@@ -9,10 +9,17 @@ trap 'rm -rf "$WORK"' EXIT
 FAILED=0
 echo "bash $BASH_VERSION"
 
+# The version lives in a file, so `upgrade` can change it. STUB_UPGRADE=fail makes the upgrade fail.
 cat >"$WORK/opencode" <<'EOF'
 #!/bin/sh
-if [ "$1" = --version ]; then echo "opencode v${STUB_VERSION:-2.1.4}"; exit 0; fi
+if [ "$1" = --version ]; then echo "opencode v$(cat "$STUB_STATE")"; exit 0; fi
 echo "$*" >>"$STUB_LOG"
+if [ "$1" = upgrade ]; then
+    [ "${STUB_UPGRADE:-}" = fail ] && { echo "upgrade failed" >&2; exit 1; }
+    # The version is the last argument, after any --method.
+    for last; do :; done
+    echo "$last" >"$STUB_STATE"
+fi
 EOF
 chmod +x "$WORK/opencode"
 
@@ -38,9 +45,11 @@ EOF
     : >"$WORK/log"
 }
 
+# STUB_VERSION, set for one call, is the OpenCode version that call sees.
 kit() {
+    echo "${STUB_VERSION:-2.2.0}" >"$WORK/version"
     env HOME="$WORK/home" XDG_CONFIG_HOME="$WORK/home/config" XDG_CACHE_HOME="$WORK/home/cache" \
-        OPENCODE_BIN="$WORK/opencode" STUB_LOG="$WORK/log" NO_COLOR=1 "$BASH" "$ROOT/install.sh" "$@" </dev/null
+        OPENCODE_BIN="$WORK/opencode" STUB_LOG="$WORK/log" STUB_STATE="$WORK/version" NO_COLOR=1 "$BASH" "$ROOT/install.sh" "$@" </dev/null
 }
 
 check() {
@@ -78,11 +87,42 @@ echo "arguments and versions"
 fresh
 if kit --only nope >"$WORK/out" 2>&1; then status=0; else status=$?; fi
 check "rejects an unknown plugin" test "$status" = 1
-if STUB_VERSION=2.1.1 kit >"$WORK/out" 2>&1; then status=0; else status=$?; fi
-check "refuses 2.1.1" test "$status" = 1
-if STUB_VERSION=2.2.0-beta.1 kit --dry-run >"$WORK/out" 2>&1; then status=0; else status=$?; fi
-check "takes a newer pre-release, with a warning" has "$WORK/out" "newer than 2.1.4"
-if STUB_VERSION=2.1.2-beta.3 kit --dry-run >"$WORK/out" 2>&1; then status=0; else status=$?; fi
-check "refuses a pre-release of the minimum" test "$status" = 1
+if STUB_VERSION=2.1.1 STUB_UPGRADE=fail kit >"$WORK/out" 2>&1; then status=0; else status=$?; fi
+check "refuses 2.1.1 when it can't be upgraded" test "$status" = 1
+check "and changes nothing" lacks "$WORK/log" "plugin add"
+fresh
+if STUB_VERSION=2.3.0-beta.1 kit --dry-run >"$WORK/out" 2>&1; then status=0; else status=$?; fi
+check "takes a newer pre-release, with a warning" has "$WORK/out" "newer than 2.2.0"
+check "and leaves it alone" lacks "$WORK/log" "upgrade"
+fresh
+if STUB_VERSION=2.1.2-beta.3 STUB_UPGRADE=fail kit --dry-run >"$WORK/out" 2>&1; then status=0; else status=$?; fi
+check "a dry run only says what it would upgrade" has "$WORK/out" "would upgrade OpenCode from 2.1.2-beta.3 to 2.2.0"
+
+echo "upgrading OpenCode"
+fresh
+STUB_VERSION=2.1.2 kit >"$WORK/out" 2>&1 || { cat "$WORK/out"; exit 1; }
+check "upgrades an older OpenCode to the tested one" has "$WORK/log" "upgrade 2.2.0"
+check "before it installs the plugins" test "$(grep -n -m1 '^upgrade' "$WORK/log" | cut -d: -f1)" -lt "$(grep -n -m1 'plugin add' "$WORK/log" | cut -d: -f1)"
+check "says so" has "$WORK/out" "Upgrading OpenCode from 2.1.2 to 2.2.0"
+fresh
+kit >"$WORK/out" 2>&1 || { cat "$WORK/out"; exit 1; }
+check "leaves the tested version alone" lacks "$WORK/log" "upgrade"
+fresh
+mkdir -p "$WORK/home/.opencode/bin" && cp "$WORK/opencode" "$WORK/home/.opencode/bin/opencode"
+echo 2.1.2 >"$WORK/version"
+env HOME="$WORK/home" XDG_CONFIG_HOME="$WORK/home/config" XDG_CACHE_HOME="$WORK/home/cache" OPENCODE_BIN="$WORK/home/.opencode/bin/opencode" \
+    STUB_LOG="$WORK/log" STUB_STATE="$WORK/version" NO_COLOR=1 "$BASH" "$ROOT/install.sh" --only delete </dev/null >"$WORK/out" 2>&1 || { cat "$WORK/out"; exit 1; }
+check "names the curl method for an OpenCode the install script put in ~/.opencode" has "$WORK/log" "upgrade --method curl 2.2.0"
+fresh
+STUB_VERSION=2.1.2 kit --keep-opencode >"$WORK/out" 2>&1 || { cat "$WORK/out"; exit 1; }
+check "--keep-opencode doesn't upgrade" lacks "$WORK/log" "upgrade"
+check "and still installs" has "$WORK/log" "plugin add"
+fresh
+STUB_VERSION=2.1.2 kit --uninstall >"$WORK/out" 2>&1 || { cat "$WORK/out"; exit 1; }
+check "--uninstall doesn't upgrade" lacks "$WORK/log" "upgrade"
+fresh
+STUB_VERSION=2.1.3 STUB_UPGRADE=fail kit >"$WORK/out" 2>&1 || { cat "$WORK/out"; exit 1; }
+check "a failed upgrade of a usable OpenCode only warns" has "$WORK/out" "could not upgrade OpenCode to 2.2.0"
+check "and installs on it" has "$WORK/log" "plugin add github:dhkimxx/opencode-lodestar"
 
 if [ "$FAILED" = 0 ]; then echo "All checks passed."; else echo "Some checks failed."; exit 1; fi
