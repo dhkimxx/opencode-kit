@@ -3,6 +3,13 @@
 All notable changes to this project are listed here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## [0.4.0] - 2026-11-01
+
+### Changed
+
+- `install.sh` installs opencode-lodestar v0.4.1, which follows how OpenCode 2.2 sizes compaction. opencode-ask stays at v0.3.3 and opencode-delete at v0.1.0.
+- An OpenCode older than 2.2.5 is upgraded to it. All three plugins were checked with OpenCode 2.2.5: opencode-ask and opencode-delete open in its TUI, and opencode-lodestar loads in its server. 2.1.2 is still the oldest version it accepts.
+
 ## [0.3.0] - 2026-10-29
 
 ### Added
@@ -28,6 +35,7 @@ This project follows [Semantic Versioning](https://semver.org).
 - Before installing, it removes every other copy of these plugins: other entries in your settings, clones in OpenCode's plugins folder, and downloaded copies in OpenCode's cache.
 - `--only` installs some of the plugins, `--uninstall` removes them, and `--dry-run` shows what would change.
 
+[0.4.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.4.0
 [0.3.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.2.0
 [0.1.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.1.0
