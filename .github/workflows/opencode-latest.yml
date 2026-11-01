@@ -1,0 +1,49 @@
+name: Newest OpenCode
+
+# Every Monday, install.sh runs against the newest OpenCode, so a release that changes the commands the kit relies on
+# shows up before users hit it. A failure opens an issue, or comments on the one already open.
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    outputs:
+      version: ${{ steps.opencode.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the newest OpenCode
+        id: opencode
+        run: |
+          curl -fsSL https://opencode.ai/v2/install | bash -s -- --no-modify-path
+          echo "version=$("$HOME/.opencode/bin/opencode" --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+[^ ]*' | head -n 1)" >> "$GITHUB_OUTPUT"
+      - name: Run install.sh against OpenCode
+        run: KIT_BASH=/bin/bash bash test/test.sh "$HOME/.opencode/bin/opencode"
+
+  # One report for both systems, so a failure on both doesn't open two issues.
+  report:
+    needs: install
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.install.outputs.version || 'the newest version' }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="install.sh fails on OpenCode $VERSION"
+          body="The weekly test of install.sh failed against OpenCode $VERSION: $RUN"
+          existing="$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then gh issue comment "$existing" --body "$body"; else gh issue create --title "$title" --body "$body"; fi

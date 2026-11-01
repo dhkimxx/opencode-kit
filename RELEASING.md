@@ -24,6 +24,8 @@
    docker run --rm -v "$PWD:/w" -w /w bash:3.2 bash test/compat.sh   # the bash that macOS ships
    ```
 
+   CI runs them on every push. Every Monday it also runs `test/test.sh` against the newest OpenCode, on Linux and macOS, and opens an issue when that fails.
+
 3. Commit, for example `Release v0.2.0`, then tag and push:
 
    ```sh
