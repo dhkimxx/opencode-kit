@@ -3,6 +3,12 @@
 All notable changes to this project are listed here.
 This project follows [Semantic Versioning](https://semver.org).
 
+## [0.5.0] - 2026-11-01
+
+### Changed
+
+- `install.sh` installs opencode-lodestar v0.4.2, which keeps files in its restoration when their code doesn't all fit. opencode-ask stays at v0.3.3 and opencode-delete at v0.1.0, and OpenCode 2.2.5 is still the tested version.
+
 ## [0.4.0] - 2026-11-01
 
 ### Changed
@@ -35,6 +41,7 @@ This project follows [Semantic Versioning](https://semver.org).
 - Before installing, it removes every other copy of these plugins: other entries in your settings, clones in OpenCode's plugins folder, and downloaded copies in OpenCode's cache.
 - `--only` installs some of the plugins, `--uninstall` removes them, and `--dry-run` shows what would change.
 
+[0.5.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.5.0
 [0.4.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.4.0
 [0.3.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.3.0
 [0.2.0]: https://github.com/dhkimxx/opencode-kit/releases/tag/v0.2.0

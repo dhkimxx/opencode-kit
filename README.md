@@ -8,7 +8,7 @@ curl -fsSL https://raw.githubusercontent.com/dhkimxx/opencode-kit/main/install.s
 
 | Plugin | What it does | Release |
 | --- | --- | --- |
-| [opencode-lodestar](https://github.com/dhkimxx/opencode-lodestar) | Keeps OpenCode on track through compaction: puts your request, the agent's latest steps, and the files it was working on back after each compaction. `/lodestar off` and `/lodestar on` turn it off and on. | v0.4.1 |
+| [opencode-lodestar](https://github.com/dhkimxx/opencode-lodestar) | Keeps OpenCode on track through compaction: puts your request, the agent's latest steps, and the files it was working on back after each compaction. `/lodestar off` and `/lodestar on` turn it off and on. | v0.4.2 |
 | [opencode-ask](https://github.com/dhkimxx/opencode-ask) | Multi-turn side questions with `/ask`, in a full-screen panel that never adds to your conversation. | v0.3.3 |
 | [opencode-delete](https://github.com/dhkimxx/opencode-delete) | Deletes the current session with `/delete`, after a confirmation. | v0.1.0 |
 
